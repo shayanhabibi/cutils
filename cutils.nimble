@@ -1,6 +1,6 @@
 version       = "0.0.1"
 author        = "shayan"
-description   = ""
+description   = "utilities for caspian programs"
 license       = "MIT"
 
 # Dependencies
