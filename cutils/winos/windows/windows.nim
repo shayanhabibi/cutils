@@ -6,6 +6,8 @@ import ./spec
 
 proc `$`*(windowHandle: WindowHandle): string =
   result = $(WindowHandle.hWnd)
+proc `==`*(wx, wy: WindowHandle): bool =
+  wx.hWnd == wy.hWnd
 
 proc findWindow*(windowName: string): WindowHandle =
   let hwnd = FindWindowW(NULL, windowName)
@@ -53,6 +55,7 @@ proc bringToTop(window: WindowHandle): bool =
 
 
 proc getActiveWindow(): WindowHandle =
+  # FIXME this gives an invalid window handle?
   result = WindowHandle(
     hWnd: GetActiveWindow()
   )
@@ -89,10 +92,13 @@ proc undoTopMost*(win: WindowHandle) =
 
 import std/colors
 when isMainModule:
-  echo(extractRGB(Color(0x00FFFF00)))
-  echo(extractRGB(Color(0xFFFF00)))
-  echo(rgb(255, 255, 00))
-  echo Color(0xFFFF00)
+  let window = getForegroundWindow()
+  let window2 = getActiveWindow()
+  echo window == window2
+  echo isValid window
+  var windowInfo: PWINDOWINFO = create(WINDOWINFO)
+  discard GetWindowInfo(window.hWnd, windowInfo)
+  echo repr windowInfo
 #   let window = findWindow("winim")
 #   makeWindowLayered window
 #   setLayeredWindowAttributes window
