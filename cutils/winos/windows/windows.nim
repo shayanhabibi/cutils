@@ -1,57 +1,8 @@
 import pkg/winim/lean
+import ./spec
 
-type
-  WindowHandle* = object
-    hWnd: HWND
 
-# Create enums so that i can hash set this bs
-type
-  WindowPos* {.pure, size: sizeof(HWND).} = enum
-    NotTop = HWND_NOTOPMOST
-    TopMost = HWND_TOPMOST
-    Top = HWND_TOP
-    Bottom = HWND_BOTTOM
 
-  WindowStyle* {.pure, size: sizeof(DWORD).} = enum
-    Left = WS_EX_LEFT # 0
-    # RightScrollBar = WS_EX_RIGHTSCROLLBAR # 0
-    # LtrReading = WS_EX_LTRREADING # 0
-    DlgModalFrame = WS_EX_DLGMODALFRAME # 1
-    NoParentNotify = WS_EX_NOPARENTNOTIFY # 4
-    TopMost = WS_EX_TOPMOST # 8
-    AcceptFiles = WS_EX_ACCEPTFILES # 16
-    Transparent = WS_EX_TRANSPARENT # 32
-    MdiChild = WS_EX_MDICHILD # 64
-    ToolWindow = WS_EX_TOOLWINDOW # 128
-    WindowEdge = WS_EX_WINDOWEDGE # 256
-    ClientEdge = WS_EX_CLIENTEDGE # 512
-    ContextHelp = WS_EX_CONTEXTHELP # 1024
-    Right = WS_EX_RIGHT # 4096
-    RtlReading = WS_EX_RTLREADING # 8192
-    LeftScrollBar = WS_EX_LEFTSCROLLBAR # 16384
-    ControlParent = WS_EX_CONTROLPARENT # 65536
-    StaticEdge = WS_EX_STATICEDGE # 131072
-    AppWindow = WS_EX_APPWINDOW # 262144
-    Layered = WS_EX_LAYERED # 524288
-    NoInheritLayour = WS_EX_NOINHERITLAYOUT # 1048576
-    NoRedirectionBitMap = WS_EX_NOREDIRECTIONBITMAP # 2097152
-    LayoutRtl = WS_EX_LAYOUTRTL # 4_194_304
-    Composited = WS_EX_COMPOSITED # 33_554_432
-    NoActivate = WS_EX_NOACTIVATE # 134_217_728
-
-  WindowLong* {.pure, size: sizeof(int).} = enum
-    UserData = GWLP_USERDATA
-    Style = GWL_EXSTYLE
-    oldStyle = GWL_STYLE
-    Id = GWLP_ID
-    HInstance = GWLP_HINSTANCE
-    WndProc = GWLP_WNDPROC
-  WindowLongs* = set[WindowLong]
-
-converter toDWORD(windowStyle: WindowStyle): DWORD = DWORD(windowStyle)
-proc toWindowStyle(dword: DWORD): WindowStyle = WindowStyle(dword)
-converter toHWND(windowPos: WindowPos): HWND = HWND(windowPos)
-proc toWindowPos(hwnd: HWND): WindowPos = WindowPos(hwnd)
 
 proc `$`*(windowHandle: WindowHandle): string =
   result = $(WindowHandle.hWnd)
@@ -59,11 +10,21 @@ proc `$`*(windowHandle: WindowHandle): string =
 proc findWindow*(windowName: string): WindowHandle =
   let hwnd = FindWindowW(NULL, windowName)
   return WindowHandle(hWnd: hwnd)
+proc isValid*(window: WindowHandle): bool =
+  result = IsWindow(window.hWnd)
+
+proc setFocus*(window: WindowHandle): WindowHandle {.discardable.} =
+  let hWnd = SetFocus(window.hWnd)
+  result = WindowHandle(hWnd: hWnd)
+proc getFocus*(): WindowHandle =
+  # TODO handle exceptions
+  result = WindowHandle(
+    hWnd: GetFocus()
+  )
 
 proc setWindowPos(window: WindowHandle, pos: HWND; x,y,cx,cy: int32 = 0): bool {.discardable.} =
   let uFlags = SWP_NOMOVE or SWP_NOSIZE
   let res = SetWindowPos(window.hWnd, pos, x,y,cx,cy, UINT(uFlags))
-
   try:
     result = bool(res)
   except:
@@ -81,6 +42,37 @@ proc makeWindowLayered(window: WindowHandle): bool {.discardable.} =
 # make sure it works as intended. Some interaction where the window must be brought
 # to the foreground first or the TOPMOST flag doesnt work?
 
+proc getLayeredWindowAttributes(window: WindowHandle) =
+  discard
+proc showWindow(window: WindowHandle): bool =
+  discard
+proc updateLayeredWindow(window: WindowHandle): bool =
+  discard
+proc bringToTop(window: WindowHandle): bool =
+  discard
+
+
+proc getActiveWindow(): WindowHandle =
+  result = WindowHandle(
+    hWnd: GetActiveWindow()
+  )
+proc updateWindow(window: WindowHandle): bool =
+  result = UpdateWindow(window.hWnd)
+proc setActiveWindow(window: WindowHandle): WindowHandle {.discardable.} =
+  let hWnd = SetActiveWindow(window.hWnd)
+  result = WindowHandle(hWnd: hWnd)
+proc getForegroundWindow(): WindowHandle =
+  result = WindowHandle(
+    hWnd: GetForegroundWindow()
+  )
+proc switchToWindow(window: WindowHandle): bool =
+  discard
+proc setForegroundWindow(window: WindowHandle): bool =
+  discard
+proc redraw(window: WindowHandle): bool =
+  discard
+
+
 proc setLayeredWindowAttributes(window: WindowHandle): bool {.discardable.} =
   let res = SetLayeredWindowAttributes(window.hWnd, 0x00FFFFFF, 125, LWA_ALPHA or LWA_COLORKEY)
   if res != 0:
@@ -91,11 +83,16 @@ proc setLayeredWindowAttributes(window: WindowHandle): bool {.discardable.} =
 
 
 proc makeTopMost*(win: WindowHandle) =
-  setWindowPos(win, WindowPos.TopMost)
+  setWindowPos(win, spec.WindowPos.TopMost)
 proc undoTopMost*(win: WindowHandle) =
-  setWindowPos(win, WindowPos.NotTop)
+  setWindowPos(win, spec.WindowPos.NotTop)
 
-# when isMainModule:
+import std/colors
+when isMainModule:
+  echo(extractRGB(Color(0x00FFFF00)))
+  echo(extractRGB(Color(0xFFFF00)))
+  echo(rgb(255, 255, 00))
+  echo Color(0xFFFF00)
 #   let window = findWindow("winim")
 #   makeWindowLayered window
 #   setLayeredWindowAttributes window
