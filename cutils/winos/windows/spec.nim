@@ -1,4 +1,5 @@
 import pkg/winim/lean
+import std/colors
 
 {.push, pure.}
 
@@ -60,3 +61,20 @@ converter toDWORD*(windowStyle: WindowStyle): DWORD = DWORD(windowStyle)
 proc toWindowStyle*(dword: DWORD): WindowStyle = WindowStyle(dword)
 converter toHWND*(windowPos: WindowPos): HWND = HWND(windowPos)
 proc toWindowPos*(hwnd: HWND): WindowPos = WindowPos(hwnd)
+
+type
+  WindowAttributes* = object
+    color*: Color
+    alpha*: uint8
+    flags*: uint32
+
+template colorPtr(attr: WindowAttributes): ptr COLORREF =
+  cast[ptr COLORREF](attr.color.addr())
+template alphaPtr(attr: WindowAttributes): ptr BYTE =
+  cast[ptr BYTE](attr.alpha.addr())
+template flagsPtr(attr: WindowAttributes): ptr DWORD =
+  cast[ptr DWORD](attr.flags.addr())
+
+template GetLayeredWindowAttributes*(hwnd: HWND, attr: WindowAttributes): WINBOOL =
+  bind colorPtr, alphaPtr, flagsPtr
+  GetLayeredWindowAttributes(hwnd, colorPtr(attr), alphaPtr(attr), flagsPtr(attr))

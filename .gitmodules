@@ -1,0 +1,15 @@
+[submodule "futexes"]
+	path = cutils/futexes
+	url = https://github.com/shayanhabibi/futexes
+[submodule "cutils/nuclear"]
+	path = cutils/nuclear
+	url = https://github.com/shayanhabibi/nuclear
+[submodule "cutils/parith"]
+	path = cutils/parith
+	url = https://github.com/shayanhabibi/parith
+[submodule "cutils/cooky"]
+	path = cutils/cooky
+	url = https://github.com/shayanhabibi/cooky
+[submodule "cutils/wrflock"]
+	path = cutils/wrflock
+	url = https://github.com/shayanhabibi/wrflock

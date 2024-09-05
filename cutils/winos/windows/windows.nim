@@ -1,3 +1,4 @@
+import std/colors
 import pkg/winim/lean
 import ./spec
 
@@ -44,8 +45,10 @@ proc makeWindowLayered(window: WindowHandle): bool {.discardable.} =
 # make sure it works as intended. Some interaction where the window must be brought
 # to the foreground first or the TOPMOST flag doesnt work?
 
-proc getLayeredWindowAttributes(window: WindowHandle) =
-  discard
+proc getLayeredWindowAttributes*(window: WindowHandle): WindowAttributes =
+  result = WindowAttributes()
+  let _ = GetLayeredWindowAttributes(window.hWnd, result)
+
 proc showWindow(window: WindowHandle): bool =
   discard
 proc updateLayeredWindow(window: WindowHandle): bool =
@@ -84,24 +87,41 @@ proc setLayeredWindowAttributes(window: WindowHandle): bool {.discardable.} =
     result = false
     echo "Failed to set layered window attributes: ", window.hWnd
 
+proc setWindowLayerColor*(window: WindowHandle; color: Color; alpha: SomeInteger) =
+  let _ = SetLayeredWindowAttributes(
+    window.hWnd,
+    COLORREF(color),
+    BYTE(alpha and 255),
+    LWA_ALPHA or LWA_COLORKEY
+  )
+
+proc setWindowLayerColor*(window: WindowHandle; color: Color) =
+  let _ = SetLayeredWindowAttributes(
+    window.hWnd,
+    COLORREF(color),
+    BYTE(255),
+    LWA_COLORKEY # this will ignore the alpha val
+  )
 
 proc makeTopMost*(win: WindowHandle) =
   setWindowPos(win, spec.WindowPos.TopMost)
 proc undoTopMost*(win: WindowHandle) =
   setWindowPos(win, spec.WindowPos.NotTop)
 
-import std/colors
 when isMainModule:
-  let window = getForegroundWindow()
-  let window2 = getActiveWindow()
-  echo window == window2
+  # let window = getForegroundWindow()
+  # let window2 = getActiveWindow()
+  # echo window == window2
+  # echo isValid window
+  # var windowInfo: PWINDOWINFO = create(WINDOWINFO)
+  # discard GetWindowInfo(window.hWnd, windowInfo)
+  # echo repr windowInfo
+  let window = findWindow("winim")
   echo isValid window
-  var windowInfo: PWINDOWINFO = create(WINDOWINFO)
-  discard GetWindowInfo(window.hWnd, windowInfo)
-  echo repr windowInfo
-#   let window = findWindow("winim")
-#   makeWindowLayered window
-#   setLayeredWindowAttributes window
+  makeWindowLayered window
+  setWindowLayerColor(window, colDarkTurquoise, 200)
+  var attrs = getLayeredWindowAttributes window
+  echo repr attrs
 #   makeTopMost window
 #   # makeTopMost(window)
 #   # undoTopMost(window)
